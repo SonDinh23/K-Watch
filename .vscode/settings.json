@@ -1,7 +1,3 @@
 {
-    "idf.pythonInstallPath": "/usr/bin/python",
-    "files.associations": {
-        "lpm013m126a.h": "c",
-        "gpio.h": "c"
-    }
+    "idf.pythonInstallPath": "/usr/bin/python"
 }
