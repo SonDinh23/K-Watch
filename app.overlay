@@ -1,0 +1,7 @@
+&lpm013m126a {
+    compatible = "jdi,lpm013m126a";
+};
+
+&uart0 {
+    status = "disabled";
+};

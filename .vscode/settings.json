@@ -1,3 +1,15 @@
 {
-    "idf.pythonInstallPath": "/usr/bin/python"
+    "idf.pythonInstallPath": "/usr/bin/python",
+    "files.associations": {
+        "lpm013m126a.h": "c",
+        "kw_gfx_font.h": "c",
+        "kw_gfx.h": "c",
+        "freemono9pt7b.h": "c",
+        "freesansbold9pt7b.h": "c",
+        "ble_peripheral.h": "c",
+        "ble_information.h": "c",
+        "face_main.h": "c",
+        "settings.h": "c",
+        "face_information.h": "c"
+    }
 }
