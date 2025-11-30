@@ -1,0 +1,177 @@
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "K_watch-pinctrl.dtsi"
+#include "K_watch-partition.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	model = "Smart Watch";
+	compatible = "KhanhElectronics,K-watch";
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,uart-mcumgr = &uart0;
+		zephyr,bt-mon-uart = &uart0;
+		zephyr,bt-c2h-uart = &uart0;
+		zephyr,ieee802154 = &ieee802154;
+		zephyr,boot-mode = &boot_mode0;
+	};
+
+	outputs {
+		compatible = "gpio-leds";
+		label = "Outputs";
+		dpExt: dpExt {
+            label = "dpExt";
+            gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+        };
+
+        dpOn: dpOn {
+            label = "dpOn";
+            gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
+        };
+
+        dpCS: dpCS {
+            label = "dpCS";
+            gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
+        };
+	};
+
+	pwm_controllers {
+		compatible = "pwm-leds";
+
+		pwm_bldp: pwm_bldp {
+			pwms = <&pwm0 0 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // Backlight for display 1khz
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		label = "Buttons";
+
+		button0: button_0 {
+			gpios = <&gpio1 04 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 0";
+		};
+
+		button1: button_1 {
+			gpios = <&gpio1 05 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 1";
+		};
+
+		button2: button_2 {
+			gpios = <&gpio1 06 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 2";
+		};
+
+		button3: button_3 {
+			gpios = <&gpio1 07 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 3";
+		};
+	};
+
+	aliases {
+        dpext = &dpExt;
+        dpon = &dpOn;
+        dpcs = &dpCS;
+        btn0 = &button0;
+        btn1 = &button1;
+        btn2 = &button2;
+        btn3 = &button3;
+		dpbl = &pwm_bldp;
+    };
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&adc {
+	status = "okay";
+};
+
+&reg0 {
+	status = "okay";
+};
+
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&uicr {
+	gpio-as-nreset;
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&nfct {
+	status = "okay";
+};
+
+&ieee802154 {
+	status = "okay";
+};
+
+&gpregret1 {
+	status = "okay";
+
+	boot_mode0: boot_mode@0 {
+		compatible = "zephyr,retention";
+		status = "okay";
+		reg = <0x0 0x1>;
+	};
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&i2c0 {
+	compatible = "nordic,nrf-twi";
+	status = "okay";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-1 = <&i2c0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&i2c1 {
+	compatible = "nordic,nrf-twi";
+	/* Cannot be used together with spi1. */
+	/* status = "okay"; */
+	pinctrl-0 = <&i2c1_default>;
+	pinctrl-1 = <&i2c1_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&spi0 {
+    compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi0_default>;
+	pinctrl-1 = <&spi0_sleep>;
+	pinctrl-names = "default", "sleep";
+    /delete-property/ cs-gpios;          /* bỏ CS tự động */
+    lpm013m126a: lpm013m126a@0 {
+        compatible = "vnd,spi-device";
+        reg = <0>;
+        label = "LPM013M126A";
+        spi-max-frequency = <1000000>;
+    };
+};

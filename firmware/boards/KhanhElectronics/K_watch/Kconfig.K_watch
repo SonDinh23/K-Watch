@@ -1,0 +1,2 @@
+config BOARD_K_WATCH
+	select SOC_NRF52840_QIAA

@@ -1,0 +1,22 @@
+identifier: K_watch/nrf52840
+name: Smart Watch
+vendor: KhanhElectronics
+type: mcu
+arch: arm
+ram: 256
+flash: 1024
+toolchain:
+  - zephyr
+supported: 
+  - adc
+  - ble
+  - counter
+  - gpio
+  - i2c
+  - i2s
+  - pwm
+  - spi
+  - usb_device
+  - usbd
+  - watchdog
+  - netif:openthread

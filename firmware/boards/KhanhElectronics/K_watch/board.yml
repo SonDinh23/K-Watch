@@ -1,0 +1,6 @@
+board:
+  name: K_watch
+  full_name: K_watch by KhanhElectronics
+  vendor: KhanhElectronics
+  socs:
+    - name: nrf52840
