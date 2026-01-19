@@ -74,23 +74,23 @@ static int drv2603_brake_strong(void)
 /* 1 click haptic (default hợp ERM) */
 static void vib_click(void)
 {
-	/* an toàn */
-	(void)drv2603_stop();
+	// /* an toàn */
+	// (void)drv2603_stop();
 
-	drv2603_enable(true);
-	k_sleep(K_MSEC(2)); /* cho IC wake */
+	// drv2603_enable(true);
+	// k_sleep(K_MSEC(2)); /* cho IC wake */
 
 	/* overdrive */
 	(void)drv2603_set_intensity(100);
 	k_sleep(K_MSEC(25));
 
-	/* brake */
-	(void)drv2603_brake_strong();
-	k_sleep(K_MSEC(10));
+	// /* brake */
+	// (void)drv2603_brake_strong();
+	// k_sleep(K_MSEC(10));
 
-	/* stop + disable */
-	(void)drv2603_stop();
-	drv2603_enable(false);
+	// /* stop + disable */
+	// (void)drv2603_stop();
+	// drv2603_enable(false);
 }
 
 int main(void)
@@ -118,10 +118,10 @@ int main(void)
 	(void)drv2603_stop();
 	drv2603_enable(false);
 
-	// while (1) {
-	// 	vib_click();
-	// 	k_sleep(K_SECONDS(2));
-	// }
+	while (1) {
+		vib_click();
+		k_sleep(K_SECONDS(2));
+	}
 
 	return 0;
 }
