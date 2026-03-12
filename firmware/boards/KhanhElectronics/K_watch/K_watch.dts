@@ -2,7 +2,10 @@
 #include <nordic/nrf52840_qiaa.dtsi>
 #include "K_watch-pinctrl.dtsi"
 #include "K_watch-partition.dtsi"
+#include <dt-bindings/regulator/npm13xx.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/led/led.h>
+#include "nrf52-bindings.h"
 
 / {
 	model = "Smart Watch";
@@ -23,18 +26,23 @@
 		label = "Outputs";
 		dpExt: dpExt {
             label = "dpExt";
-            gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+            gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
         };
 
         dpOn: dpOn {
             label = "dpOn";
-            gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
+            gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
         };
 
         dpCS: dpCS {
             label = "dpCS";
-            gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
         };
+
+		vibEN: vibEN {
+			label = "vibEN";
+			gpios = <&gpio0 02 GPIO_ACTIVE_LOW>;
+		};
 	};
 
 	pwm_controllers {
@@ -43,6 +51,10 @@
 		pwm_bldp: pwm_bldp {
 			pwms = <&pwm0 0 PWM_MSEC(1) PWM_POLARITY_NORMAL>; // Backlight for display 1khz
 		};
+
+		pwm_vibpwm: pwm_vibpwm {
+			pwms = <&pwm1 1 PWM_USEC(50) PWM_POLARITY_NORMAL>; // pwm for vibrator 20khz
+		};
 	};
 
 	buttons {
@@ -50,26 +62,25 @@
 		label = "Buttons";
 
 		button0: button_0 {
-			gpios = <&gpio1 04 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			label = "Button 0";
+			gpios = <&gpio0 31 (GPIO_INT_WAKEUP | GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "BT0-UP";
 		};
 
 		button1: button_1 {
-			gpios = <&gpio1 05 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			label = "Button 1";
+			gpios = <&gpio1 10 (GPIO_INT_WAKEUP | GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "BT1-MID";
 		};
 
 		button2: button_2 {
-			gpios = <&gpio1 06 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			label = "Button 2";
+			gpios = <&gpio1 12 (GPIO_INT_WAKEUP | GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "BT2-DOWN";
 		};
 
 		button3: button_3 {
-			gpios = <&gpio1 07 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			label = "Button 3";
+			gpios = <&gpio1 02 (GPIO_INT_WAKEUP | GPIO_ACTIVE_LOW)>;
+			label = "BT3-BACK";
 		};
 	};
-
 	aliases {
         dpext = &dpExt;
         dpon = &dpOn;
@@ -79,6 +90,9 @@
         btn2 = &button2;
         btn3 = &button3;
 		dpbl = &pwm_bldp;
+		vib-en = &vibEN;
+		led-strip = &led_strip;
+		pwm-vibrator = &pwm_vibpwm;
     };
 };
 
@@ -143,6 +157,93 @@
 	pinctrl-0 = <&i2c0_default>;
 	pinctrl-1 = <&i2c0_sleep>;
 	pinctrl-names = "default", "sleep";
+
+	rv8263c8: rv8263c8@51 {
+		compatible = "microcrystal,rv-8263-c8";
+		status = "okay";
+		reg = <0x51>;
+		int-gpios = <&gpio1 01 GPIO_ACTIVE_HIGH>;
+	};
+
+	lsm6dsl: lsm6dsl@6a {
+        compatible = "st,lsm6dsl";
+        status = "okay";
+		irq-gpios = <&gpio1 8 GPIO_ACTIVE_HIGH>;
+        reg = <0x6a>;
+    };
+
+	npm1300_pmic: pmic@6b {
+		compatible = "nordic,npm1300";
+		reg = <0x6b>;
+
+		/* Connect PMIC host interrupt to MCU GPIO1 pin 15 (P1.15) */
+		host-int-gpios = <&gpio1 15 0>;
+		/* PMIC internal interrupt output index (use pin 1 on the PMIC) */
+		pmic-int-pin = <1>;
+
+		npm1300_gpio: gpio-controller {
+			compatible = "nordic,npm1300-gpio";
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <5>;
+		};
+
+		npm1300_regulators: regulators {
+			compatible = "nordic,npm1300-regulator";
+
+			/* limits are set to min/max allowed values */
+			npm1300_buck1: BUCK1 {
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-init-microvolt = <3300000>;
+			};
+
+			npm1300_buck2: BUCK2 {
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-init-microvolt = <3300000>;
+			};
+
+			npm1300_ldo1: LDO1 {
+				regulator-min-microvolt = <0000000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			npm1300_ldo2: LDO2 {
+				regulator-min-microvolt = <0000000>;
+				regulator-max-microvolt = <3300000>;
+			};
+		};
+
+		npm1300_charger: charger {
+			compatible = "nordic,npm1300-charger";
+			term-microvolt = <4300000>;
+			term-warm-microvolt = <4000000>;
+			current-microamp = <100000>;
+			dischg-limit-microamp = <1000000>;
+			vbus-limit-microamp = <500000>;
+			thermistor-ohms = <10000>;
+			thermistor-beta = <3380>;
+			charging-enable;
+			vbatlow-charge-enable;
+		};
+
+		npm1300_buttons: buttons {
+			compatible = "gpio-keys";
+			pmic_button0: pmic_button_0 {
+				gpios = < &npm1300_gpio 0 GPIO_ACTIVE_HIGH>;
+				label = "Pmic button switch 0";
+			zephyr,code = <INPUT_KEY_0>;
+			};
+		};
+
+		npm1300_leds: leds {
+			compatible = "nordic,npm1300-led";
+			nordic,led0-mode = "error";
+			nordic,led1-mode = "charging";
+			nordic,led2-mode = "host";
+		};
+	};
 };
 
 &i2c1 {
@@ -161,17 +262,53 @@
 	pinctrl-names = "default", "sleep";
 };
 
-&spi0 {
+&pwm1 {
+	status = "okay";
+	pinctrl-0 = <&pwm1_default>;
+	pinctrl-1 = <&pwm1_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&spi1 {
     compatible = "nordic,nrf-spim";
 	status = "okay";
-	pinctrl-0 = <&spi0_default>;
-	pinctrl-1 = <&spi0_sleep>;
+	pinctrl-0 = <&spi1_default>;
+	pinctrl-1 = <&spi1_sleep>;
 	pinctrl-names = "default", "sleep";
-    /delete-property/ cs-gpios;          /* bỏ CS tự động */
     lpm013m126a: lpm013m126a@0 {
         compatible = "vnd,spi-device";
         reg = <0>;
         label = "LPM013M126A";
         spi-max-frequency = <1000000>;
     };
+
+	// ls013b7dh03: ls013b7dh03@0 {
+    //     compatible = "vnd,spi-device";
+    //     reg = <0>;
+    //     label = "LS013B7DH03";
+    //     spi-max-frequency = <1000000>;
+    // };
+};
+
+&spi3 {
+	status = "okay";
+	pinctrl-0 = <&spi3_default>;
+	pinctrl-1 = <&spi3_sleep>;
+	pinctrl-names = "default", "sleep";
+    compatible = "nordic,nrf-spim";
+	led_strip: ws2812@0 {
+		compatible = "worldsemi,ws2812-spi";
+
+		/* SPI */
+		reg = <0>; /* ignored, but necessary for SPI bindings */
+		spi-max-frequency = <SPI_FREQ>;
+
+		/* WS2812 */
+		chain-length = <1>; /* arbitrary; change at will */
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+		spi-one-frame = <ONE_FRAME>;
+		spi-zero-frame = <ZERO_FRAME>;
+	};
 };
